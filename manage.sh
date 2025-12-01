@@ -63,8 +63,27 @@ case $COMMAND in
         print_step "Waiting for services to be ready..."
         sleep 10
         
+        print_step "Waiting for database to be healthy..."
+        max_attempts=30
+        attempt=0
+        while [ $attempt -lt $max_attempts ]; do
+            if docker compose exec -T postgres pg_isready -U ${DB_USER:-ticket_user} > /dev/null 2>&1; then
+                break
+            fi
+            attempt=$((attempt + 1))
+            sleep 1
+        done
+        
+        if [ $attempt -eq $max_attempts ]; then
+            print_warning "Database not ready after ${max_attempts} seconds. Seed may fail."
+        fi
+        
         print_step "Seeding database with test data..."
-        docker compose exec -T api npm run seed || print_warning "Seed failed or already seeded. Continuing..."
+        if docker compose exec api npm run seed; then
+            print_success "Database seeded successfully!"
+        else
+            print_warning "Seed failed or already seeded. Continuing..."
+        fi
         
         print_success "All services are running!"
         echo ""
