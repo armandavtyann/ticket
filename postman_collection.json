@@ -1,0 +1,289 @@
+{
+  "info": {
+    "name": "Support Ticket Manager API",
+    "description": "API collection for Support Ticket Manager with background jobs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3001",
+      "type": "string"
+    },
+    {
+      "key": "apiUrl",
+      "value": "{{baseUrl}}/api",
+      "type": "string"
+    },
+    {
+      "key": "jobId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": ["{{baseUrl}}"],
+          "path": ["health"]
+        }
+      }
+    },
+    {
+      "name": "Tickets",
+      "item": [
+        {
+          "name": "Get All Tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/tickets?page=1&limit=20",
+              "host": ["{{apiUrl}}"],
+              "path": ["tickets"],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/tickets/:id",
+              "host": ["{{apiUrl}}"],
+              "path": ["tickets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{ticketId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Ticket",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"New Support Ticket\",\n  \"description\": \"This is a test ticket\",\n  \"status\": \"open\"\n}"
+            },
+            "url": {
+              "raw": "{{apiUrl}}/tickets",
+              "host": ["{{apiUrl}}"],
+              "path": ["tickets"]
+            }
+          }
+        },
+        {
+          "name": "Update Ticket",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Updated Ticket Title\",\n  \"description\": \"Updated description\",\n  \"status\": \"in-progress\"\n}"
+            },
+            "url": {
+              "raw": "{{apiUrl}}/tickets/:id",
+              "host": ["{{apiUrl}}"],
+              "path": ["tickets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{ticketId}}"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Delete Ticket",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/tickets/:id",
+              "host": ["{{apiUrl}}"],
+              "path": ["tickets", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{ticketId}}"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jobs",
+      "item": [
+        {
+          "name": "Create Bulk Delete Job",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.collectionVariables.set('jobId', jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "optional-unique-key-here",
+                "description": "Optional: Prevents duplicate jobs"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"bulk-delete\",\n  \"payload\": {\n    \"ticketIds\": [\n      \"ticket-uuid-1\",\n      \"ticket-uuid-2\",\n      \"ticket-uuid-3\"\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{apiUrl}}/jobs",
+              "host": ["{{apiUrl}}"],
+              "path": ["jobs"]
+            },
+            "description": "Creates a bulk delete job. Returns immediately with job status 'queued'. Requires admin role."
+          }
+        },
+        {
+          "name": "Get Job by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/jobs/:id",
+              "host": ["{{apiUrl}}"],
+              "path": ["jobs", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{jobId}}"
+                }
+              ]
+            },
+            "description": "Get detailed job information including item-level outcomes and errors."
+          }
+        },
+        {
+          "name": "Get All Jobs",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/jobs",
+              "host": ["{{apiUrl}}"],
+              "path": ["jobs"]
+            },
+            "description": "Get list of all jobs. No filters applied."
+          }
+        },
+        {
+          "name": "Get Jobs by Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/jobs?type=bulk-delete",
+              "host": ["{{apiUrl}}"],
+              "path": ["jobs"],
+              "query": [
+                {
+                  "key": "type",
+                  "value": "bulk-delete"
+                }
+              ]
+            },
+            "description": "Filter jobs by type."
+          }
+        },
+        {
+          "name": "Get Jobs by Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/jobs?status=completed",
+              "host": ["{{apiUrl}}"],
+              "path": ["jobs"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "completed"
+                }
+              ]
+            },
+            "description": "Filter jobs by status (queued, running, completed, failed, canceled)."
+          }
+        },
+        {
+          "name": "Cancel Job",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{apiUrl}}/jobs/:id/cancel",
+              "host": ["{{apiUrl}}"],
+              "path": ["jobs", ":id", "cancel"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "{{jobId}}"
+                }
+              ]
+            },
+            "description": "Cancel a running job. Requires admin role. Only works for queued or running jobs."
+          }
+        }
+      ]
+    }
+  ]
+}
