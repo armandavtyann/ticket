@@ -31,9 +31,11 @@ RUN npm ci --only=production
 
 # Copy built files from builder
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/package.json ./package.json
+# Ensure public directory exists, then copy public folder
+RUN mkdir -p ./public
+COPY --from=builder /app/public ./public
 # Copy TypeScript and necessary dev dependencies for next.config.ts
 COPY --from=builder /app/node_modules/typescript ./node_modules/typescript
 COPY --from=builder /app/node_modules/@types ./node_modules/@types
